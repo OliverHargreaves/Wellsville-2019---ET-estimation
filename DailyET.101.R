@@ -10,7 +10,7 @@ library(multcompView)
 library(tidyverse)
 
 # Load the data and define the variables for sensor 101####
-setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101") # set the working directory in the folder containing the data file
+#setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101") # set the working directory in the folder containing the data file
 data.101=read_excel("DailySM.101.xlsx") # load the SM data from excel
 data.101=na.omit(data.101) # eliminate the days with no data
 
