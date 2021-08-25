@@ -10,8 +10,8 @@ library(multcompView)
 library(tidyverse)
 
 # Load the data and define the variables for sensor 101####
-setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101") # set the working directory in the folder containing the data file
-data.101=read_excel("DailySM.101.xlsx") # load the SM data from excel
+setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101")
+data.101=read_excel("DailySM.101.xlsx") # load the daily SM data from excel
 data.101=na.omit(data.101) # eliminate the days with no data
 
 n=length(data.101$Date.101) # Number of days with data
@@ -65,7 +65,7 @@ legend('bottom', lty=1, lwd=3, legend=c('s5 - 1ft','s6 - 2ft','s7 - 3ft','s8 - 4
 
 # Sub-station 1
 # Total water content (mm) of the soil profile
-wc.1=(sm1*sd1+sm2*sd2+sm3*sd3+sm4*sd4)/100
+wc.1=(sm1*sd1+sm2*(sd2-sd1)+sm3*(sd3-sd3)+sm4*(sd4-sd3))/100
 
 # ET from sub-station 1
 ET.A.1=c()
@@ -75,20 +75,21 @@ for(i in 2:n) { # eliminate negative ET contributions
   if (ET.A.1[i]<0) {ET.A.1[i]=NA}}         
 plot(data.101$Date.101, ET.A.1, 
      type='h', lwd=2, col='darkslategray3',
-     main='ET from sub-station 1', xlab='', ylab='ET (mm)')
+     main='ET from sub-station 1', xlab='', ylab='ET (mm)',
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
 # ET/ETo for sub-station 1
 Kc.A.1=ET.A.1/ETo
 plot(data.101$Date.101, Kc.A.1,
-     ylim=c(0, 5),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 1', xlab='', ylab='Kc')
 
 # Sub-station 101
 # total water content (mm) of the soil profile
-wc.101=(sm5*sd5+sm6*sd6+sm7*sd7+sm8*sd8)/100
+wc.101=(sm5*(sd5)+sm6*(sd6-sd5)+sm7*(sd7-sd6)+sm8*(sd8-sd7))/100
 
 # ET from sub-station 101
 ET.A.101=c()
@@ -98,14 +99,15 @@ for(i in 2:n) { # eliminate negative ET contributions
   if (ET.A.101[i]<0) {ET.A.101[i]=NA}}         
 plot(data.101$Date.101, ET.A.101, 
      type='h', lwd=2, col='darkslategray3',
-     main='ET from sub-station 101', xlab='', ylab='ET (mm)')
+     main='ET from sub-station 101', xlab='', ylab='ET (mm)',
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
 # ET/ETo for sub-station 101
 Kc.A.101=ET.A.101/ETo
 plot(data.101$Date.101, Kc.A.101,
-     ylim=c(0, 5),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 101', xlab='', ylab='Kc')
 
@@ -245,7 +247,7 @@ ET.B.101=ET5.101+ET6.101+ET7.101+ET8.101
 ET.B.101[ET.B.101==0]=NA # Turn zeroes into NAs
 
 plot(data.101$Date.101, ET.B.101,
-     ylim=c(0, 15), type='h', col='darkslategray3', lwd=2,
+     ylim=c(0, 12), type='h', col='darkslategray3', lwd=2,
      main='Daily ET for sub-station 101', xlab='', ylab='ET (mm)')
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
@@ -432,7 +434,7 @@ ET.C.1=ET1.101+ET2.101+ET3.101+ET4.101
 ET.C.1[ET.C.1==0]=NA # Turn zeroes into NAs
 
 plot(data.101$Date.101, ET.C.1,
-     ylim=c(0, 15),
+     ylim=c(0, 12),
      type='h', col='darkslategray3', lwd=2,
      main='Daily ET for sub-station 1', xlab='', ylab='ET (mm)')
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
@@ -467,7 +469,7 @@ ET.C.101=ET5.101+ET6.101+ET7.101+ET8.101
 ET.C.1[ET.C.1==0]=NA # Turn zeroes into NAs
 
 plot(data.101$Date.101, ET.C.101,
-     ylim=c(0, 15),
+     ylim=c(0, 12),
      type='h', col='darkslategray3', lwd=2,
      main='Daily ET for sub-station 101', xlab='', ylab='ET (mm)')
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
@@ -502,7 +504,7 @@ w=3 # window used to calculate the derivatives in days
 
 # Sub-station 1
 # Total water content (mm) of the soil profile
-wc.1=(sm1*sd1+sm2*sd2+sm3*sd3+sm4*sd4)/100
+wc.1=(sm1*(sd1)+sm2*(sd2-sd2)+sm3*(sd3-sd2)+sm4*(sd4-sd3))/100
 
 # 1st derivative - slope of the SM curve
 f1=c() # 1st derivative
@@ -544,13 +546,13 @@ ET.D.1=sensor1$ET
 # ET/ETo for sub-station 1
 Kc.D.1=ET.D.1/ETo
 plot(data.101$Date.101, Kc.D.1,
-     ylim=c(0, 5),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 1', xlab='', ylab='Kc')
 
 # Sub-station 101
 # total water content (mm) of the soil profile
-wc.101=(sm5*sd5+sm6*sd6+sm7*sd7+sm8*sd8)/100
+wc.101=(sm5*(sd5)+sm6*(sd6-sd5)+sm7*(sd7-sd6)+sm8*(sd8-sd7))/100
 
 # 1st derivative - slope of the SM curve
 f1=c() # 1st derivative
@@ -583,7 +585,7 @@ for (i in 3:(n-3)) {
 plot(sensor101$Date, sensor101$ET,
      type='h', lwd=3, col='darkslategray3',
      main='ET from sub-station 101', xlab='', ylab='ET (mm)',
-     ylim=c(0,15))
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
@@ -592,7 +594,7 @@ ET.D.101=sensor101$ET
 # ET/ETo for sub-station 101
 Kc.D.101=ET.D.101/ETo
 plot(data.101$Date.101, Kc.D.101,
-     ylim=c(0, 5),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 101', xlab='', ylab='Kc')
 
@@ -913,7 +915,7 @@ ET.E.1[ET.E.1==0]=NA # turn zeros into NA
 plot(data.101$Date.101, ET.E.1, 
      type='h', lwd=2, col='darkslategray3',
      main='Daily ET for sub-station 1', xlab='', ylab='ET (mm)',
-     ylim=c(0,11))
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
@@ -951,7 +953,7 @@ ET.E.101[ET.E.101==0]=NA # turn zeros into NA
 plot(data.101$Date.101, ET.E.101, 
      type='h', lwd=2, col='darkslategray3',
      main='Daily ET for sub-station 101', xlab='', ylab='ET (mm)',
-     ylim=c(0,11))
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
@@ -970,7 +972,7 @@ ggplot(heatmap.data, mapping=aes(x, y, fill=ET),) +
 # ET/ETo ~ crop coefficient
 Kc.E.101=ET.E.101/ETo
 plot(data.101$Date.101, Kc.E.101,
-     ylim=c(0, 1),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 101', xlab='', ylab='Kc')
 
@@ -1318,7 +1320,7 @@ ET.F.1[ET.F.1==0]=NA # turn zeros into NAs
 plot(data.101$Date.101, ET.F.1, 
      type='h', lwd=2, col='darkslategray3',
      main='Daily ET from entire soil profile', xlab='', ylab='ET (mm)',
-     ylim=c(0,11))
+     ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
@@ -1337,7 +1339,7 @@ ggplot(heatmap.data, mapping=aes(x, y, fill=ET),) +
 # ET/ETo ~ crop coeficcient
 Kc.F.1=ET.F.1/ETo
 plot(data.101$Date.101, Kc.F.1,
-     ylim=c(0, 1),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 1', xlab='', ylab='Kc')
 
@@ -1356,7 +1358,7 @@ ET.F.101[ET.F.101==0]=NA # turn zeros into NAs
 plot(data.101$Date.101, ET.F.101, 
      type='h', lwd=2, col='darkslategray3',
      main='Daily ET for sub-station 101', xlab='', ylab='ET (mm)',
-     ylim=c(0,11))
+     ylim=c(0,12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
 
@@ -1375,7 +1377,7 @@ ggplot(heatmap.data, mapping=aes(x, y, fill=ET),) +
 # ET/ETo ~ crop coefficient 
 Kc.F.101=ET.F.101/ETo
 plot(data.101$Date.101, Kc.F.101,
-     ylim=c(0, 1),
+     ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
      main='Daily ET/ETo for sub-station 101', xlab='', ylab='Kc')
 
@@ -1397,8 +1399,9 @@ ggplot(comparison.1, aes(x = method, y = ET, fill = date)) +
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  ggtitle("Daily ET method comparison") +
-  xlab("")+ylab("ET (mm)")
+  ggtitle("Daily ET method comparison for sub-station 1") +
+  xlab("")+ylab("ET (mm)") + 
+  geom_boxplot(color="black", fill="darkslategray3")
 
 # Box-plot for ET/ETo
 ggplot(comparison.1, aes(x = method, y = Kc, fill = date)) +
@@ -1409,8 +1412,9 @@ ggplot(comparison.1, aes(x = method, y = Kc, fill = date)) +
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  ggtitle("Daily ET/ETo method comparison") +
-  xlab("") + ylab("ET/ETo")
+  ggtitle("Daily ET/ETo method comparison for sub-station 1") +
+  xlab("") + ylab("ET/ETo") +
+  geom_boxplot(color="black", fill="orchid3")
 
 # Sub-station 101
 method=rep(c('A','B','C','D','E','F'), each=n)
@@ -1427,8 +1431,10 @@ ggplot(comparison.101, aes(x = method, y = ET, fill = date)) +
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  ggtitle("Daily ET method comparison") +
-  xlab("") + ylab("ET (mm)")
+  ggtitle("Daily ET method comparison for sub-station 101") +
+  xlab("") + ylab("ET (mm)") +
+  geom_boxplot(color="black", fill="darkslategray3")
+
 
 # Box-plot ET/ETo
 ggplot(comparison.101, aes(x = method, y = Kc, fill = date)) +
@@ -1439,8 +1445,10 @@ ggplot(comparison.101, aes(x = method, y = Kc, fill = date)) +
     legend.position="none",
     plot.title = element_text(size=11)
   ) +
-  ggtitle("Daily ET/ETo method comparison") +
-  xlab("") + ylab("ET/ETo")
+  ggtitle("Daily ET/ETo method comparison for substation 101") +
+  xlab("") + ylab("ET/ETo") +
+  geom_boxplot(color="black", fill="orchid3")
+
 
 
 
@@ -1449,8 +1457,8 @@ ggplot(comparison.101, aes(x = method, y = Kc, fill = date)) +
 
 # sub-station 1
 Results.1=data.frame(Date=data.101$Date.101, ET.A.1, Kc.A.1, ET.B.1, Kc.B.1, ET.C.1, Kc.C.1, ET.D.1, Kc.D.1, ET.E.1, Kc.E.1, ET.F.1, Kc.F.1)
-write_xlsx(Results.1, path="C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101/Results.1.xlsx") # write the excel with the daily data
+write_xlsx(Results.1, path="C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101/Results.1.xlsx") 
 
 # sub-station 101
 Results.101=data.frame(Date=data.101$Date.101, ET.A.101, Kc.A.101, ET.B.101, Kc.B.101, ET.C.101, Kc.C.101, ET.D.101, Kc.D.101, ET.E.101, Kc.E.101, ET.F.101, Kc.F.101)
-write_xlsx(Results.101, path="C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101/Results.101.xlsx") # write the excel with the daily data
+write_xlsx(Results.101, path="C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101/Results.101.xlsx")
