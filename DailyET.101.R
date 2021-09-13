@@ -10,7 +10,7 @@ library(multcompView)
 library(tidyverse)
 
 # Load the data and define the variables for sensor 101####
-setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil sensor data/Sensor 101")
+setwd("C:/Users/Oliver/Box/DiviningWater/Wellsville2019/Soil Sensor Data/Sensor 101")
 data.101=read_excel("DailySM.101.xlsx") # load the daily SM data from excel
 data.101=na.omit(data.101) # eliminate the days with no data
 
@@ -30,9 +30,16 @@ sm5=data.101$sm5.101
 sm6=data.101$sm6.101
 sm7=data.101$sm7.101
 sm8=data.101$sm8.101
+# Top soil layer penalization: sensors 1 and 5
+sm1=sm1/3 
+sm5=sm5/3
+
 # Root depth (mm)
 rd=data.101$Zr_Corn
-# plot root depth with sensor depth
+
+# Save the root depth and sensor depth diagram in a tiff file
+tiff(file="CornRootDepth.tiff",
+     width=420, height=297, units="mm", res=600)
 plot(data.101$Date.101, -rd, 
      type='h', col='goldenrod', lwd='3', ylim=c(-1800, 0),
      main='Corn root depth', ylab='Soil depth (mm)', xlab=NA)
@@ -41,7 +48,9 @@ abline(h=-sd1, col='coral3', lwd=2)
 abline(h=-sd2, col='steelblue3', lwd=2)
 abline(h=-sd3, col='gold3', lwd=2)
 abline(h=-sd4, col='olivedrab3', lwd=2)
-legend('bottomleft', inset=0.02, lty=1, lwd=2, legend=c('s1','s2','s3','s4'), col=c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
+legend('bottomleft', inset=0.02, lty=1, lwd=2, legend=c('Sensor 1','Sensor 2','Sensor 3','Sensor 4'), col=c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
+dev.off()
+
 # Plot daily soil moisture data
 # Sub-station 1
 plot (data.101$Date.101, sm1, ylim=c(0, 60), type='l', lwd=2, col='coral3', 
@@ -49,14 +58,14 @@ plot (data.101$Date.101, sm1, ylim=c(0, 60), type='l', lwd=2, col='coral3',
 lines(data.101$Date.101, sm2, type='l', lwd=2, col='steelblue3')
 lines(data.101$Date.101, sm3, type='l', lwd=2, col='gold3')
 lines(data.101$Date.101, sm4, type='l', lwd=2, col='olivedrab3')
-legend('bottom', lty=1, lwd=3, legend=c('s1 - 1ft','s2 - 2ft','s3 - 3ft','s4 - 4ft'), col = c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
+legend('bottom', lty=1, lwd=3, legend=c('Sensor 1: 1ft','Sensor 2: 2ft','Sensor 3: 3ft','Sensor 4: 4ft'), col = c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
 # Sub-station 101
 plot (data.101$Date.101, sm5, ylim=c(0, 60), type='l', lwd=2, col='coral3', 
       main='Daily SM for sub-station 101', xlab='', ylab='Soil water content (%)') 
 lines(data.101$Date.101, sm6, type='l', lwd=2, col='steelblue3')
 lines(data.101$Date.101, sm7, type='l', lwd=2, col='gold3')
 lines(data.101$Date.101, sm8, type='l', lwd=2, col='olivedrab3')
-legend('bottom', lty=1, lwd=3, legend=c('s5 - 1ft','s6 - 2ft','s7 - 3ft','s8 - 4ft'), col = c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
+legend('bottom', lty=1, lwd=3, legend=c('Sensor 5: 1ft','Sensor 6: 2ft','Sensor 7: 3ft','Sensor 8: 4ft'), col = c('coral3','steelblue3','gold3','olivedrab3'), ncol=2)
 
 
 # Method A: Water balance on the soil profile as a whole ####
@@ -65,7 +74,7 @@ legend('bottom', lty=1, lwd=3, legend=c('s5 - 1ft','s6 - 2ft','s7 - 3ft','s8 - 4
 
 # Sub-station 1
 # Total water content (mm) of the soil profile
-wc.1=(sm1*sd1+sm2*(sd2-sd1)+sm3*(sd3-sd3)+sm4*(sd4-sd3))/100
+wc.1=(sm1*sd1+sm2*(sd2-sd1)+sm3*(sd3-sd2)+sm4*(sd4-sd3))/100
 
 # ET from sub-station 1
 ET.A.1=c()
@@ -75,7 +84,7 @@ for(i in 2:n) { # eliminate negative ET contributions
   if (ET.A.1[i]<0) {ET.A.1[i]=NA}}         
 plot(data.101$Date.101, ET.A.1, 
      type='h', lwd=2, col='darkslategray3',
-     main='ET from sub-station 1', xlab='', ylab='ET (mm)',
+     main='Daily ET from sub-station 1: Method A', xlab='', ylab='ET (mm)',
      ylim=c(0, 12))
 lines(data.101$Date.101, ETo, type='l', xlab='2019', ylab='Reference ET (mm)', col='palegreen3', lwd=3)
 legend('topright', legend=c('ETo', 'ET'), col=c('palegreen3', 'darkslategray3'), lwd=2, inset=0.02)
@@ -85,7 +94,7 @@ Kc.A.1=ET.A.1/ETo
 plot(data.101$Date.101, Kc.A.1,
      ylim=c(0, 2),
      type='h', lwd=2, col='orchid3',
-     main='Daily ET/ETo for sub-station 1', xlab='', ylab='Kc')
+     main='Daily ET/ETo for sub-station 1: Method A', xlab='', ylab='Kc')
 
 # Sub-station 101
 # total water content (mm) of the soil profile
@@ -500,24 +509,37 @@ plot(data.101$Date.101, Kc.C.101,
 # derivative is positive we are assuming that water is leaving the system only via 
 # evapotranspiration at a rate equal to the slope of the soil moisture graph.
 
-w=3 # window used to calculate the derivatives in days
+w=5 # window used to calculate the derivatives in days
 
 # Sub-station 1
 # Total water content (mm) of the soil profile
-wc.1=(sm1*(sd1)+sm2*(sd2-sd2)+sm3*(sd3-sd2)+sm4*(sd4-sd3))/100
+wc.1=(sm1*(sd1)+sm2*(sd2-sd1)+sm3*(sd3-sd2)+sm4*(sd4-sd3))/100
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(wc.1[i+1]-wc.1[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=wc.1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -531,7 +553,7 @@ sensor1=data.frame(Date=data.101$Date.101, SM=wc.1, f1, f2) # data frame with th
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor1$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor1$f1[i]<0 & sensor1$f2[i]>0) {sensor1$ET[i]=abs(sensor1$f1[i])} 
 }
 plot(sensor1$Date, sensor1$ET,
@@ -555,17 +577,30 @@ plot(data.101$Date.101, Kc.D.1,
 wc.101=(sm5*(sd5)+sm6*(sd6-sd5)+sm7*(sd7-sd6)+sm8*(sd8-sd7))/100
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(wc.101[i+1]-wc.101[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=wc.101[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)), 
@@ -579,7 +614,7 @@ sensor101=data.frame(Date=data.101$Date.101, SM=wc.101, f1, f2) # data frame wit
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor101$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor101$f1[i]<0 & sensor101$f2[i]>0) {sensor101$ET[i]=abs(sensor101$f1[i])} 
 }
 plot(sensor101$Date, sensor101$ET,
@@ -602,7 +637,7 @@ plot(data.101$Date.101, Kc.D.101,
 # Same as method D but on each soil layer individually and then summed up and not accounting for
 # root growth over the season.
 
-w=3 # window used to calculate the derivatives in days
+w=5 # window used to calculate the derivatives in days
 
 # Sub station 1
 
@@ -610,17 +645,30 @@ w=3 # window used to calculate the derivatives in days
 SM1=sm1*sd1/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM1[i+1]-SM1[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -634,7 +682,7 @@ sensor1=data.frame(Date=data.101$Date.101, SM=SM1, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor1$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor1$f1[i]<0 & sensor1$f2[i]>0) {sensor1$ET[i]=abs(sensor1$f1[i])} 
 }
 plot(sensor1$Date, sensor1$ET,
@@ -646,17 +694,30 @@ plot(sensor1$Date, sensor1$ET,
 SM2=sm2*(sd2-sd1)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM2[i+1]-SM2[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM2[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -670,7 +731,7 @@ sensor2=data.frame(Date=data.101$Date.101, SM=SM2, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor2$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor2$f1[i]<0 & sensor2$f2[i]>0) {sensor2$ET[i]=abs(sensor2$f1[i])} 
 }
 
@@ -683,17 +744,30 @@ plot(sensor2$Date, sensor2$ET,
 SM3=sm3*(sd3-sd2)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM3[i+1]-SM3[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM3[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -707,7 +781,7 @@ sensor3=data.frame(Date=data.101$Date.101, SM=SM3, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor3$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor3$f1[i]<0 & sensor3$f2[i]>0) {sensor3$ET[i]=abs(sensor3$f1[i])} 
 }
 
@@ -720,17 +794,30 @@ plot(sensor3$Date, sensor3$ET,
 SM4=sm4*(sd4-sd3)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM4[i+1]-SM4[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM4[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -744,7 +831,7 @@ sensor4=data.frame(Date=data.101$Date.101, SM=SM4, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor4$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor4$f1[i]<0 & sensor4$f2[i]>0) {sensor4$ET[i]=abs(sensor4$f1[i])} 
 }
 
@@ -757,17 +844,30 @@ plot(sensor4$Date, sensor4$ET,
 SM5=sm5*sd5/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM5[i+1]-SM5[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM5[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -781,7 +881,7 @@ sensor5=data.frame(Date=data.101$Date.101, SM=SM5, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor5$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor5$f1[i]<0 & sensor5$f2[i]>0) {sensor5$ET[i]=abs(sensor5$f1[i])} 
 }
 plot(sensor5$Date, sensor5$ET,
@@ -793,17 +893,30 @@ plot(sensor5$Date, sensor5$ET,
 SM6=sm6*(sd6-sd5)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM6[i+1]-SM6[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM6[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -817,7 +930,7 @@ sensor6=data.frame(Date=data.101$Date.101, SM=SM6, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor6$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor6$f1[i]<0 & sensor6$f2[i]>0) {sensor6$ET[i]=abs(sensor6$f1[i])} 
 }
 
@@ -830,17 +943,30 @@ plot(sensor6$Date, sensor6$ET,
 SM7=sm7*(sd7-sd6)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM7[i+1]-SM7[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM7[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -854,7 +980,7 @@ sensor7=data.frame(Date=data.101$Date.101, SM=SM7, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor7$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor7$f1[i]<0 & sensor7$f2[i]>0) {sensor7$ET[i]=abs(sensor7$f1[i])} 
 }
 
@@ -867,17 +993,30 @@ plot(sensor7$Date, sensor7$ET,
 SM8=sm8*(sd8-sd7)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM8[i+1]-SM8[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM8[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -891,7 +1030,7 @@ sensor8=data.frame(Date=data.101$Date.101, SM=SM8, f1, f2) # data frame with the
 
 # Estimate ET rate - if f1<0 & f2>0: ET=|f1|
 sensor8$ET=c(rep(NA, n)) # create ET column
-for (i in 3:(n-3)) {
+for (i in w:(n-w)) {
   if (sensor8$f1[i]<0 & sensor8$f2[i]>0) {sensor8$ET[i]=abs(sensor8$f1[i])} 
 }
 
@@ -979,22 +1118,34 @@ plot(data.101$Date.101, Kc.E.101,
 # Method F: Derivatives accounting for root growth ####
 # Same as method F but accounting for root growth over the season.
 
-w=3 # window used to calculate the derivatives in days
+w=5 # window used to calculate the derivatives in days
 
 # soil depth 1
 SM1=sm1*sd1/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM1[i+1]-SM1[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
@@ -1021,17 +1172,30 @@ plot(sensor1$Date, sensor1$ET,
 SM2=sm2*(sd2-sd1)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM2[i+1]-SM2[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM2[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1063,17 +1227,30 @@ plot(sensor2$Date, sensor2$ET,
 SM3=sm3*(sd3-sd2)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM3[i+1]-SM3[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM3[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1105,17 +1282,30 @@ plot(sensor3$Date, sensor3$ET,
 SM4=sm4*(sd4-sd3)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM4[i+1]-SM4[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM4[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1147,17 +1337,30 @@ plot(sensor4$Date, sensor4$ET,
 SM5=sm5*sd5/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM5[i+1]-SM5[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM5[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1183,17 +1386,30 @@ plot(sensor5$Date, sensor5$ET,
 SM6=sm6*(sd6-sd5)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM6[i+1]-SM6[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM6[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1225,17 +1441,30 @@ plot(sensor6$Date, sensor6$ET,
 SM7=sm7*(sd7-sd6)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM7[i+1]-SM7[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM7[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
@@ -1267,17 +1496,30 @@ plot(sensor7$Date, sensor7$ET,
 SM8=sm8*(sd8-sd7)/100 # soil moisture (mm)
 
 # 1st derivative - slope of the SM curve
-f1=c() # 1st derivative
-f1[1]=NA
-for (i in 2:n) {
-  f1[i]=(SM8[i+1]-SM8[i-1])/w
+f1=c()   # 1st derivative
+f1[1]=NA # Non-computable for the first day
+
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=SM8[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f1[i]=reg$coefficients[2]
 }
+
 # 2nd derivative - calculate the inflection point
-f2=c() # 2nd derivative
-f2[1]=NA
-for (i in 2:n) {
-  f2[i]=(f1[i+1]-f1[i-1])/w
+f2=c()   # 2nd derivative
+f2[1]=NA # Non-computable for the first day
+for (i in ((w+1)/2):n) {
+  low_val=i-(w-1)/2
+  hig_val=i+(w-1)/2
+  y=f1[low_val:hig_val]
+  x=1:w
+  reg=lm(y~x)
+  f2[i]=reg$coefficients[2]
 }
+
 plot(data.101$Date.101, f1, 
      type='o', pch=19, cex=0.8, lwd=2, col='darkgoldenrod', 
      ylim=c(min(c(f1,f2),na.rm=T),max(c(f1,f2), na.rm=T)),
